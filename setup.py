@@ -12,7 +12,7 @@ setuptools.setup(
         description="Electromagnetic scattering using T-matrix approach",
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url="",
+        url="https://github.com/TCvanLeth/ScatterPy",
         packages=setuptools.find_packages(),
         install_requires=[
                 'numpy',
