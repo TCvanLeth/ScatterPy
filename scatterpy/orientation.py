@@ -1,6 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+ScatterPy T-matrix simulation of electromagnetic scattering by nonspherical
+particles.
+Copyright (C) 2019 Thomas C. van Leth
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+-------------------
+
 Orientation averaging
 =====================
 
@@ -131,7 +150,8 @@ def get_points_and_weights(w_func, left=-1.0, right=1.0, n_points=3, n=4096):
     Quadrature points and weights for a weighting function.
     using Gautschi's method.
 
-    (based on code by J. Leinonen)
+    (This function is adapted from code by Jussi Leinonen (c) 2015, made
+    available under the MIT licence.)
     """
     dx = (right-left)/n
     z = np.linspace(left+0.5*dx, right-0.5*dx, n)
@@ -174,7 +194,8 @@ def sph_uniform_pdf():
         A function that returns the value of the spherical Jacobian-normalized
         uniform PDF. It is normalized for the interval [0, pi].
 
-    (based on code by J. Leinonen)
+    (This function is adapted from code by Jussi Leinonen (c) 2015, made
+    available under the MIT licence.)
     """
     norm_const = 1
 
@@ -203,7 +224,8 @@ def sph_gauss_pdf(std=0.2):
         normalized Gaussian PDF with the given STD at x (radians). It is
         normalized for the interval [0, pi].
 
-    (based on code by J. Leinonen)
+    (This function is adapted from code by Jussi Leinonen (c) 2015, made
+    available under the MIT licence.)
     """
     norm_const = 1
 
