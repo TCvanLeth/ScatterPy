@@ -3,28 +3,15 @@
 """
 ScatterPy T-matrix simulation of electromagnetic scattering by nonspherical
 particles.
+
 Copyright (C) 2019 Thomas C. van Leth
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 -------------------
 
 This module contains functions to numerically calculate scattering amplitude
 and phase matrices for arbitrary rotationally symmetric particles using the
 T-matrix method.
 
-These routines are based on the original FORTRAN routines by Mishchenko (1998).
+These routines are based on the original FORTRAN routines by M.I. Mishchenko (1998).
 
 Functions
 ---------
@@ -43,7 +30,7 @@ from scatterpy import shapes
 from scatterpy import special
 
 
-def calc_T(D, wl, mr, sfunc=None, nm=None, ng=None,
+def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
            nm_max=100, ng_max=500, **kwargs):
     """
     Calculate the T-matrix given arrays of particle characteristics.
@@ -57,74 +44,80 @@ def calc_T(D, wl, mr, sfunc=None, nm=None, ng=None,
         in the same units as D.
     mr : ndarray or complex
         Complex index of refraction for the scattering particle.
-    sfunc : function
+    sfunc : function, optional
         Function of D that returns the horizontal radius of the scattering
-        particle as a function of vertical angle.
+        particle as a function of vertical angle. If no function is provided
+        default to a perfect sphere.
     nm : int, optional
-        Tuning parameter.
-    ng : int, optional
-        Tuning parameter.
+        Tuning parameter determining the largest order to use for Bessel,
+        Hankel and Wigner d functions. Warning: setting this too large will
+        greatly affect the amount of memory required. By default, this value is
+        determined by autotuning.
+    n_gauss : int, optional
+        Number of sample points and weights for the Gauss-Legendre quadrature
+        used to evaluate the shape of the particle. By default, this value is
+        determined by autotuning.
     nm_max : int, optional
         Maximum value for nm when autotuning. Default is 100.
     ng_max : int, optional
-        Maximum value of ng when autotuning. Default is 500.
+        Maximum value of n_gauss when autotuning. Default is 500.
 
     Returns
     -------
     T : ndarray
         The T-matrix or array of matrices. Last dimensions are
-        nm, ng, ng, 2, 2.
+        nm, n_gauss, n_gauss, 2, 2.
     """
     if sfunc is None:
-        sfunc = lambda x: shapes.spheroid(np.array(1.1))
+        sfunc = lambda x: shapes.spheroid(np.array(1.0))
 
     x_ev = np.pi * D / wl
     shape = sfunc(D)
 
-    if nm is None or ng is None:
+    if nm is None or n_gauss is None:
         x_ev_max = np.nanmax(x_ev)
         shape_max = sfunc(np.nanmax(D))
         args = (x_ev_max, np.nanmax(mr), shape_max)
 
         # tune n_max parameter
         xmin = int(max(4, np.max(x_ev_max + 4.05 * x_ev_max**(1/3))))
-        pfunc = lambda x: {'nm': x, 'ng': x*2}
+        pfunc = lambda x: {'nm': x, 'n_gauss': x*2}
         pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'nm', **kwargs)
 
         # tune n_gauss parameter
-        pfunc = lambda x: {'nm': pars['nm'], 'ng': x}
-        pars = tune(calc_T_inner, args, pars['ng'] + 1, ng_max, pfunc, 'ng', **kwargs)
-        nm, ng = pars['nm'], pars['ng']
+        pfunc = lambda x: {'nm': pars['nm'], 'n_gauss': x}
+        pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gauss', **kwargs)
+        nm, n_gauss = pars['nm'], pars['n_gauss']
 
-    T = calc_T_inner(x_ev, mr, shape, nm=nm, ng=ng)
+    T = calc_T_inner(x_ev, mr, shape, nm=nm, n_gauss=n_gauss)
     return T
 
 
-def _calc_T(x_ev, mr, shape, nm=None, ng=None, nm_max=100, ng_max=500,
+def _calc_T(x_ev, mr, shape, nm=None, n_gauss=None, nm_max=100, ng_max=500,
             **kwargs):
-    if nm is None or ng is None:
+    if nm is None or n_gauss is None:
         args = (x_ev, mr, shape)
 
         # tune n_max parameter
         xmin = int(max(4, np.max(x_ev + 4.05 * x_ev**(1/3))))
-        pfunc = lambda x: {'nm': x, 'ng': x*2}
+        pfunc = lambda x: {'nm': x, 'n_gauss': x*2}
         pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'nm', **kwargs)
 
         # tune n_gauss parameter
-        pfunc = lambda x: {'nm': pars['nm'], 'ng': x}
-        pars = tune(calc_T_inner, args, pars['ng'] + 1, ng_max, pfunc, 'ng', **kwargs)
-        nm, ng = pars['nm'], pars['ng']
+        pfunc = lambda x: {'nm': pars['nm'], 'n_gauss': x}
+        pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gaussg', **kwargs)
+        nm, n_gauss = pars['nm'], pars['n_gauss']
 
-    T = calc_T_inner(x_ev, mr, shape, nm=nm, ng=ng)
+    T = calc_T_inner(x_ev, mr, shape, nm=nm, n_gauss=n_gauss)
     return T
 
 
-def calc_T_inner(x_ev, mr, shape, nm=7, ng=15, check=False):
+def calc_T_inner(x_ev, mr, shape, nm=7, n_gauss=15, check=False):
     """
     Compute the T-matrix for a given particle shape function.
     """
     # n_gauss dependent
-    x, w = np.polynomial.legendre.leggauss(2*ng)
+    x, w = np.polynomial.legendre.leggauss(2*n_gauss)
     r, dr = shape(x)
     rr = (w * r)[..., None, :, None, None]
     del w

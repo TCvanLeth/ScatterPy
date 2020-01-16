@@ -3,21 +3,8 @@
 """
 ScatterPy T-matrix simulation of electromagnetic scattering by nonspherical
 particles.
+
 Copyright (C) 2019 Thomas C. van Leth
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <http://www.gnu.org/licenses/>.
-
 -------------------
 
 Particle shapes
@@ -144,7 +131,7 @@ def gen_chebyshev(c, ng=60):
 
 
 ###############################################################################
-def dropshape(D):
+def dropshape_CB90(D):
     """
     Raindrop shape according to Chuang and Beard (1990).
 
@@ -189,7 +176,7 @@ def dropshape(D):
     return gen_chebyshev(c)
 
 
-def dropshape2(D):
+def dropshape_Th07(D):
     """
     Raindrop shape according to Thurai et al. (2007).
 
@@ -217,7 +204,7 @@ def dropshape2(D):
     return spheroid(c)
 
 
-def dropshape3(D):
+def dropshape_An99(D):
     """
     Raindrop shape according to Andsager et al. (1999).
 
@@ -250,6 +237,6 @@ if __name__ == '__main__':
     Example of usage.
     """
     D = np.asarray([2e-3, 4e-3])
-    shape = dropshape(D, chunks=D.chunks + ((11,),), new_axis=1)
+    shape = dropshape_CB90(D, chunks=D.chunks + ((11,),), new_axis=1)
     cheb = gen_chebyshev(np.polynomial.legendre.leggauss(100)[0], shape.compute())
     print(cheb)
