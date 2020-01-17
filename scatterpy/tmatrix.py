@@ -30,7 +30,7 @@ from scatterpy import shapes
 from scatterpy import special
 
 
-def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
+def calc_T(D, wl, mr, sfunc=None, n_maxorder=None, n_gauss=None,
            nm_max=100, ng_max=500, **kwargs):
     """
     Calculate the T-matrix given arrays of particle characteristics.
@@ -48,7 +48,7 @@ def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
         Function of D that returns the horizontal radius of the scattering
         particle as a function of vertical angle. If no function is provided
         default to a perfect sphere.
-    nm : int, optional
+    n_maxorder : int, optional
         Tuning parameter determining the largest order to use for Bessel,
         Hankel and Wigner d functions. Warning: setting this too large will
         greatly affect the amount of memory required. By default, this value is
@@ -58,7 +58,7 @@ def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
         used to evaluate the shape of the particle. By default, this value is
         determined by autotuning.
     nm_max : int, optional
-        Maximum value for nm when autotuning. Default is 100.
+        Maximum value for n_maxorder when autotuning. Default is 100.
     ng_max : int, optional
         Maximum value of n_gauss when autotuning. Default is 500.
 
@@ -66,7 +66,7 @@ def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
     -------
     T : ndarray
         The T-matrix or array of matrices. Last dimensions are
-        nm, n_gauss, n_gauss, 2, 2.
+        n_maxorder, n_gauss, n_gauss, 2, 2.
     """
     if sfunc is None:
         sfunc = lambda x: shapes.spheroid(np.array(1.0))
@@ -74,45 +74,45 @@ def calc_T(D, wl, mr, sfunc=None, nm=None, n_gauss=None,
     x_ev = np.pi * D / wl
     shape = sfunc(D)
 
-    if nm is None or n_gauss is None:
+    if n_maxorder is None or n_gauss is None:
         x_ev_max = np.nanmax(x_ev)
         shape_max = sfunc(np.nanmax(D))
         args = (x_ev_max, np.nanmax(mr), shape_max)
 
         # tune n_max parameter
         xmin = int(max(4, np.max(x_ev_max + 4.05 * x_ev_max**(1/3))))
-        pfunc = lambda x: {'nm': x, 'n_gauss': x*2}
-        pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'nm', **kwargs)
+        pfunc = lambda x: {'n_maxorder': x, 'n_gauss': x*2}
+        pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'n_maxorder', **kwargs)
 
         # tune n_gauss parameter
-        pfunc = lambda x: {'nm': pars['nm'], 'n_gauss': x}
+        pfunc = lambda x: {'n_maxorder': pars['n_maxorder'], 'n_gauss': x}
         pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gauss', **kwargs)
-        nm, n_gauss = pars['nm'], pars['n_gauss']
+        n_maxorder, n_gauss = pars['n_maxorder'], pars['n_gauss']
 
-    T = calc_T_inner(x_ev, mr, shape, nm=nm, n_gauss=n_gauss)
+    T = calc_T_inner(x_ev, mr, shape, n_maxorder=n_maxorder, n_gauss=n_gauss)
     return T
 
 
-def _calc_T(x_ev, mr, shape, nm=None, n_gauss=None, nm_max=100, ng_max=500,
+def _calc_T(x_ev, mr, shape, n_maxorder=None, n_gauss=None, nm_max=100, ng_max=500,
             **kwargs):
-    if nm is None or n_gauss is None:
+    if n_maxorder is None or n_gauss is None:
         args = (x_ev, mr, shape)
 
         # tune n_max parameter
         xmin = int(max(4, np.max(x_ev + 4.05 * x_ev**(1/3))))
-        pfunc = lambda x: {'nm': x, 'n_gauss': x*2}
-        pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'nm', **kwargs)
+        pfunc = lambda x: {'n_maxorder': x, 'n_gauss': x*2}
+        pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'n_maxorder', **kwargs)
 
         # tune n_gauss parameter
-        pfunc = lambda x: {'nm': pars['nm'], 'n_gauss': x}
+        pfunc = lambda x: {'n_maxorder': pars['n_maxorder'], 'n_gauss': x}
         pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gaussg', **kwargs)
-        nm, n_gauss = pars['nm'], pars['n_gauss']
+        n_maxorder, n_gauss = pars['n_maxorder'], pars['n_gauss']
 
-    T = calc_T_inner(x_ev, mr, shape, nm=nm, n_gauss=n_gauss)
+    T = calc_T_inner(x_ev, mr, shape, n_maxorder=n_maxorder, n_gauss=n_gauss)
     return T
 
 
-def calc_T_inner(x_ev, mr, shape, nm=7, n_gauss=15, check=False):
+def calc_T_inner(x_ev, mr, shape, n_maxorder=7, n_gauss=15, check=False):
     """
     Compute the T-matrix for a given particle shape function.
     """
@@ -130,11 +130,11 @@ def calc_T_inner(x_ev, mr, shape, nm=7, n_gauss=15, check=False):
 
     # n_max dependent
     if check:
-        m_max = 0
+        m_maxorder = 0
     else:
-        m_max = nm
+        m_maxorder = n_maxorder
 
-    n = np.arange(1, nm + 1)
+    n = np.arange(1, n_maxorder + 1)
     an = n * (n + 1)
     an2 = np.sqrt((2 * n + 1) / an)
     rr = rr * an2[:, None] * an2[None, :]
@@ -142,17 +142,17 @@ def calc_T_inner(x_ev, mr, shape, nm=7, n_gauss=15, check=False):
     drc = drc * an[None, :]
     del an, an2, n
 
-    s = (np.arange(m_max + 1)[:, None]**2 / (1 - x**2))[..., None, None]
+    s = (np.arange(m_maxorder + 1)[:, None]**2 / (1 - x**2))[..., None, None]
     rs = rr * np.sqrt(s)
 
     # spherical Bessel and Hankel functions
-    J, dJ = _bessel(z, special.sph_jn, nm)
-    Jc, dJc = _bessel(z_mr, special.sph_jn, nm)
-    H, dH = map(lambda x, y: x + 1j * y, (J, dJ), _bessel(z, special.sph_yn, nm))
+    J, dJ = _bessel(z, special.sph_jn, n_maxorder)
+    Jc, dJc = _bessel(z_mr, special.sph_jn, n_maxorder)
+    H, dH = map(lambda x, y: x + 1j * y, (J, dJ), _bessel(z, special.sph_yn, n_maxorder))
     del z, z_mr
 
     # create wigner d-matrix
-    dv1, dv2 = special.wigner_d(x, nm, m_max)
+    dv1, dv2 = special.wigner_d(x, n_maxorder, m_maxorder)
     wig_d = np.swapaxes(matstack.combo(dv1, dv2, dv1, dv2), 1, 2)
     del dv1, dv2, x
     gc.collect()
@@ -180,11 +180,11 @@ def calc_T_inner(x_ev, mr, shape, nm=7, n_gauss=15, check=False):
 
     # convergence checks
     if check:
-        D_n1 = np.arange(3, 2 * nm + 3, 2)
+        D_n1 = np.arange(3, 2 * n_maxorder + 3, 2)
         Tdiag = T[0].diagonal()
 
-        Qext = np.sum(D_n1 * (Tdiag.real[:nm] + Tdiag.real[nm:]))
-        Qsca = np.sum(D_n1 * (np.abs(Tdiag[:nm])**2 + np.abs(Tdiag[nm:])**2))
+        Qext = np.sum(D_n1 * (Tdiag.real[:n_maxorder] + Tdiag.real[n_maxorder:]))
+        Qsca = np.sum(D_n1 * (np.abs(Tdiag[:n_maxorder])**2 + np.abs(Tdiag[n_maxorder:])**2))
         return Qext, Qsca
     return matstack.unstack(T)
 
