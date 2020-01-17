@@ -23,14 +23,18 @@ General shapes
 Raindrop shapes
 ---------------
 .. autosummary::
-    dropshape
-    dropshape2
-    dropshape3
+    dropshape_CB90
+    dropshape_Th07
+    dropshape_An99
 """
 
 import numpy as np
 from scipy.interpolate import interp1d
 
+
+###############################################################################
+# The following are generic rotationally symmetric particle shapes in spherical
+# coordinates.
 
 def spheroid(c):
     """
@@ -43,8 +47,9 @@ def spheroid(c):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
     c = c[..., None]
     def func(x):
@@ -71,8 +76,9 @@ def chebyshev(c, n):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
     c = c[..., None]
     def func(x):
@@ -105,8 +111,9 @@ def gen_chebyshev(c, ng=60):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
     c = c[..., None]
     def func(x):
@@ -131,6 +138,9 @@ def gen_chebyshev(c, ng=60):
 
 
 ###############################################################################
+# The following are specific raindrop shapes as a function of equivalent volume
+# diameter.
+
 def dropshape_CB90(D):
     """
     Raindrop shape according to Chuang and Beard (1990).
@@ -145,8 +155,9 @@ def dropshape_CB90(D):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
 
     r = np.array([1., 1.5, 2., 2.5, 3., 3.5, 4., 4.5, 5., 5.5, 6., 6.5, 7., 8.,
@@ -190,8 +201,9 @@ def dropshape_Th07(D):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
     ar1 = 1.173 - 0.5165e3*D + 0.4698e6*D**2 - 0.1317e9*D**3 - 8.5e9*D**4
     ar2 = 1.065 - 62.5*D - 3.99e3*D**2 + 7.66e5*D**3 - 4.095e7*D**4
@@ -208,7 +220,7 @@ def dropshape_An99(D):
     """
     Raindrop shape according to Andsager et al. (1999).
 
-    Computes the raindrop axis ratio according to the empirical sormula by
+    Computes the raindrop axis ratio according to the empirical formula by
     Andsager et al. (1999) assuming a spheroid drop shape.
 
     Parameters
@@ -218,8 +230,9 @@ def dropshape_An99(D):
 
     Returns
     -------
-    func(x), a function that returns the radius and first derivative of the
-    radius at the theta angles determined by Gaussian quadrature x.
+    func(x) : function
+        A function that returns the radius and first derivative of the
+        radius at the theta angles determined by Gaussian quadrature x.
     """
     ar1 = 1.0048 + 0.57*D - 2.628e4*D**2 + 3.682e6*D**3 - 1.677e8*D**4
     ar2 = 1.012 - 14.4*D - 1.03e4*D**2
@@ -232,6 +245,7 @@ def dropshape_An99(D):
     return spheroid(c)
 
 
+###############################################################################
 if __name__ == '__main__':
     """
     Example of usage.

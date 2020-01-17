@@ -45,9 +45,9 @@ def calc_T(D, wl, mr, sfunc=None, n_maxorder=None, n_gauss=None,
     mr : ndarray or complex
         Complex index of refraction for the scattering particle.
     sfunc : function, optional
-        Function of D that returns the horizontal radius of the scattering
-        particle as a function of vertical angle. If no function is provided
-        default to a perfect sphere.
+        Function of D that returns a function of the horizontal radius of the
+        scattering particle as a function of vertical angle. If no function is
+        provided default to a perfect sphere.
     n_maxorder : int, optional
         Tuning parameter determining the largest order to use for Bessel,
         Hankel and Wigner d functions. Warning: setting this too large will
@@ -71,10 +71,14 @@ def calc_T(D, wl, mr, sfunc=None, n_maxorder=None, n_gauss=None,
     if sfunc is None:
         sfunc = lambda x: shapes.spheroid(np.array(1.0))
 
+    # Calculate relative particle size.
     x_ev = np.pi * D / wl
     shape = sfunc(D)
 
     if n_maxorder is None or n_gauss is None:
+
+        # Select the most 'extreme' parameter combination from the arrays,
+        # which is likely to take the longest to converge.
         x_ev_max = np.nanmax(x_ev)
         shape_max = sfunc(np.nanmax(D))
         args = (x_ev_max, np.nanmax(mr), shape_max)
@@ -89,35 +93,47 @@ def calc_T(D, wl, mr, sfunc=None, n_maxorder=None, n_gauss=None,
         pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gauss', **kwargs)
         n_maxorder, n_gauss = pars['n_maxorder'], pars['n_gauss']
 
-    T = calc_T_inner(x_ev, mr, shape, n_maxorder=n_maxorder, n_gauss=n_gauss)
-    return T
-
-
-def _calc_T(x_ev, mr, shape, n_maxorder=None, n_gauss=None, nm_max=100, ng_max=500,
-            **kwargs):
-    if n_maxorder is None or n_gauss is None:
-        args = (x_ev, mr, shape)
-
-        # tune n_max parameter
-        xmin = int(max(4, np.max(x_ev + 4.05 * x_ev**(1/3))))
-        pfunc = lambda x: {'n_maxorder': x, 'n_gauss': x*2}
-        pars = tune(calc_T_inner, args, xmin, nm_max, pfunc, 'n_maxorder', **kwargs)
-
-        # tune n_gauss parameter
-        pfunc = lambda x: {'n_maxorder': pars['n_maxorder'], 'n_gauss': x}
-        pars = tune(calc_T_inner, args, pars['n_gauss'] + 1, ng_max, pfunc, 'n_gaussg', **kwargs)
-        n_maxorder, n_gauss = pars['n_maxorder'], pars['n_gauss']
-
-    T = calc_T_inner(x_ev, mr, shape, n_maxorder=n_maxorder, n_gauss=n_gauss)
-    return T
+    return calc_T_inner(x_ev, mr, shape, n_maxorder=n_maxorder, n_gauss=n_gauss)
 
 
 def calc_T_inner(x_ev, mr, shape, n_maxorder=7, n_gauss=15, check=False):
     """
     Compute the T-matrix for a given particle shape function.
+
+    Parameters
+    ----------
+    x_ev : ndarray or float
+        Dimensionless equivalent volume diameter of the particle relative to
+        the wavelength of the scattered radiation.
+    mr : ndarray or complex
+        Complex index of refraction for the scattering particle.
+    shape : function
+        Function that returns the horizontal radius of the scattering
+        particle as a function of vertical angle.
+    n_maxorder : int, optional
+        Tuning parameter determining the largest order to use for Bessel,
+        Hankel and Wigner d functions. Warning: setting this too large will
+        greatly affect the amount of memory required. Defaults to 7.
+    n_gauss : int, optional
+        Number of sample points and weights for the Gauss-Legendre quadrature
+        used to evaluate the shape of the particle. Defaults to 15.
+    check : bool, optional
+        When set to true, only the first slice of the T-matrix is evaluated
+        and convergence checks are returned. This is usually only used when
+        called by the autotuning function. Defaults to false.
+
+    Returns
+    -------
+    T : ndarray
+        The T-matrix or array of matrices. Last dimensions are
+        n_maxorder, n_gauss, n_gauss, 2, 2.
+    Qext : float, optional
+        Convergence check
+    Qsca : float, optional
+        Convergence check
     """
     # n_gauss dependent
-    x, w = np.polynomial.legendre.leggauss(2*n_gauss)
+    x, w = np.polynomial.legendre.leggauss(2 * n_gauss)
     r, dr = shape(x)
     rr = (w * r)[..., None, :, None, None]
     del w
@@ -145,9 +161,11 @@ def calc_T_inner(x_ev, mr, shape, n_maxorder=7, n_gauss=15, check=False):
     s = (np.arange(m_maxorder + 1)[:, None]**2 / (1 - x**2))[..., None, None]
     rs = rr * np.sqrt(s)
 
-    # spherical Bessel and Hankel functions
+    # Compute the spherical Bessel functions.
     J, dJ = _bessel(z, special.sph_jn, n_maxorder)
     Jc, dJc = _bessel(z_mr, special.sph_jn, n_maxorder)
+
+    # Compute the Hankel functions.
     H, dH = map(lambda x, y: x + 1j * y, (J, dJ), _bessel(z, special.sph_yn, n_maxorder))
     del z, z_mr
 
@@ -186,6 +204,7 @@ def calc_T_inner(x_ev, mr, shape, n_maxorder=7, n_gauss=15, check=False):
         Qext = np.sum(D_n1 * (Tdiag.real[:n_maxorder] + Tdiag.real[n_maxorder:]))
         Qsca = np.sum(D_n1 * (np.abs(Tdiag[:n_maxorder])**2 + np.abs(Tdiag[n_maxorder:])**2))
         return Qext, Qsca
+
     return matstack.unstack(T)
 
 

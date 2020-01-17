@@ -84,7 +84,7 @@ def calc_SZ_oa(T, theta0, theta, phi0, phi, pdf, n_alpha=5):
 
 def calc_S_oa(T, theta0, theta, phi0, phi, pdf, n_alpha=5):
     """
-    Compute the S matrices using variable orientation scatterers.
+    Compute the S matrix using variable orientation scatterers.
     Averages over orientation.
 
     Parameters
@@ -140,8 +140,8 @@ def get_points_and_weights(w_func, left=-1.0, right=1.0, n_points=3, n=4096):
     (This function is adapted from code by Jussi Leinonen (c) 2015, made
     available under the MIT licence.)
     """
-    dx = (right-left)/n
-    z = np.linspace(left+0.5*dx, right-0.5*dx, n)
+    dx = (right - left) / n
+    z = np.linspace(left + 0.5 * dx, right-0.5*dx, n)
     w = w_func(z) * dx
     zw = z * w
 
@@ -173,7 +173,7 @@ def get_points_and_weights(w_func, left=-1.0, right=1.0, n_points=3, n=4096):
 
 def sph_uniform_pdf():
     """
-    Uniform PDF for orientation averaging.
+    Uniform probabbility density function for orientation averaging.
 
     Returns
     -------
@@ -197,7 +197,7 @@ def sph_uniform_pdf():
 
 def sph_gauss_pdf(std=0.2):
     """
-    Gaussian PDF for orientation averaging.
+    Gaussian probability density function for orientation averaging.
 
     Parameters
     ----------
