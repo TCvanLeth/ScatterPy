@@ -217,17 +217,17 @@ def calc_S(T, theta0, theta, phi0, phi, alpha, beta):
     T : ndarray
         The T-matrix.
     theta0 : float or ndarray.
-        Incoming beam angle in rad.
+        Incoming beam zenith angle in rad.
     theta : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam zenith angle in rad.
     phi0 : float or ndarray
-        Incoming beam angle in rad.
+        Incoming beam azimuth angle in rad.
     phi : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam azimuth angle in rad.
     alpha : float or ndarray
-        Drop canting angle in rad.
+        Drop canting euler angle in rad (rotation around z axis).
     beta : float or ndarray
-        Drop canting angle in rad
+        Drop canting euler angle in rad (rotation around x' axis).
 
     Returns
     -------
@@ -473,12 +473,12 @@ if __name__ == '__main__':
     wl = 3.1415925  # wavelength of incident light (same unit as radius)
     mr = np.asarray([1.5+0.02j, 1.8+0.02j])  # refractive index
 
-    alpha = np.asarray([np.deg2rad(145)]) # drop angle
-    beta = np.asarray([np.deg2rad(52)]) # drop angle
-    theta0 = np.asarray([np.deg2rad(56), np.deg2rad(60)]) # incomming beam angle
-    theta = np.asarray([np.deg2rad(65), np.deg2rad(70)]) # outgoing beam angle
-    phi0 = np.asarray([np.deg2rad(114), np.deg2rad(120)]) # incoming beam angle
-    phi = np.asarray([np.deg2rad(128), np.deg2rad(130)]) # outgoing beam angle
+    alpha = np.asarray([np.deg2rad(145)]) # Drop canting euler angle in rad (rotation around z axis).
+    beta = np.asarray([np.deg2rad(52)]) # # Drop canting euler angle in rad (rotation around x' axis).
+    theta0 = np.asarray([np.deg2rad(56), np.deg2rad(60)]) # incomming beam zenith angle
+    theta = np.asarray([np.deg2rad(65), np.deg2rad(70)]) # outgoing beam zenith angle
+    phi0 = np.asarray([np.deg2rad(114), np.deg2rad(120)]) # incoming beam azimuth angle
+    phi = np.asarray([np.deg2rad(128), np.deg2rad(130)]) # outgoing beam azimuth angle
 
     sfunc = lambda x: shapes.gen_chebyshev(np.array([-0.0481, 0.0359, -0.1263, 0.0244,
                                            0.0091, -0.0099, 0.0015, 0.0025,

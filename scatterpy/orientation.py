@@ -39,13 +39,13 @@ def calc_SZ_oa(T, theta0, theta, phi0, phi, pdf, n_alpha=5):
     T : ndarray
         The T matrix or array of matrices.
     theta0 : float or ndarray
-        Incoming beam angle in rad.
+        Incoming beam zenith angle in rad.
     theta : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam zenith angle in rad.
     phi0 : float or ndarray
-        Incoming beam angle in rad.
+        Incoming beam azimuth angle in rad.
     phi : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam azimuth angle in rad.
     pdf : function
         A function that returns the value of a spherical Jacobian-
         normalized PDF at x (radians). It is assumed to be normalized for the
@@ -92,13 +92,13 @@ def calc_S_oa(T, theta0, theta, phi0, phi, pdf, n_alpha=5):
     T : ndarray
         The T matrix or array of matrices.
     theta0 : float or ndarray
-        Incoming beam angle in rad.
+        Incoming beam zenith angle in rad.
     theta : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam zenith angle in rad.
     phi0 : float or ndarray
-        Incoming beam angle in rad.
+        Incoming beam azimuth angle in rad.
     phi : float or ndarray
-        Outgoing beam angle in rad.
+        Outgoing beam azimuth angle in rad.
     pdf : function
         A function that returns the value of a spherical Jacobian-
         normalized PDF at x (radians). It is assumed to be normalized for the
@@ -243,10 +243,10 @@ if __name__ == '__main__':
     sfunc = shapes.dropshape
     wfunc = sph_gauss_pdf()
 
-    theta0 = np.deg2rad(56) # incomming beam angle
-    theta = np.deg2rad(65) # outgoing beam angle
-    phi0 = np.deg2rad(114) # incoming beam angle
-    phi = np.deg2rad(128) # outgoing beam angle
+    theta0 = np.deg2rad(56) # incomming beam zenith angle
+    theta = np.deg2rad(65) # outgoing beam zenith angle
+    phi0 = np.deg2rad(114) # incoming beam azimuth angle
+    phi = np.deg2rad(128) # outgoing beam azimuth angle
 
     T = calc_T(D, wl, mr, sfunc=sfunc)
     S, Z = calc_SZ_oa(T, theta0, theta, phi0, phi, wfunc)
