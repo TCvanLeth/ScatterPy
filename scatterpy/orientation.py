@@ -230,7 +230,7 @@ if __name__ == '__main__':
     """
     Example of usage.
     """
-    from scatter import shapes
+    from scatterpy import shapes
 
     attrs = {'quantity':'diameter', 'unit':'m'}
     D = np.arange(4e-3, 5e-3, 1e-4) # equivalent sphere diameter

@@ -251,6 +251,6 @@ if __name__ == '__main__':
     Example of usage.
     """
     D = np.asarray([2e-3, 4e-3])
-    shape = dropshape_CB90(D, chunks=D.chunks + ((11,),), new_axis=1)
-    cheb = gen_chebyshev(np.polynomial.legendre.leggauss(100)[0], shape.compute())
+    shape = dropshape_CB90(D)
+    cheb = shape(np.polynomial.legendre.leggauss(100)[0])
     print(cheb)
