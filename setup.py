@@ -6,7 +6,7 @@ with open("README.md", 'r') as fh:
 
 setuptools.setup(
         name="scatterpy",
-        version="0.1.0",
+        version="0.1.1",
         author="T.C. van Leth",
         author_email="tommy.vanleth@wur.nl",
         description="Electromagnetic scattering using T-matrix approach",
